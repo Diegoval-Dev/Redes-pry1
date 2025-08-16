@@ -31,3 +31,53 @@
 {"ts": "2025-08-16T17:45:38.285547+00:00", "event": "info", "msg": "Recibido shutdown. Cerrando servidor."}
 {"ts": "2025-08-16T17:45:38.289540+00:00", "event": "response", "method": "shutdown", "id": 4, "duration_ms": 7.84}
 {"ts": "2025-08-16T17:45:38.293210+00:00", "event": "shutdown", "msg": "Servidor MCP stdio detenido"}
+{"ts": "2025-08-16T17:51:13.039838+00:00", "event": "startup", "msg": "Servidor MCP stdio iniciado"}
+{"ts": "2025-08-16T17:51:13.045158+00:00", "event": "request", "method": "initialize", "id": 1, "has_params": true}
+{"ts": "2025-08-16T17:51:13.048391+00:00", "event": "response", "method": "initialize", "id": 1, "duration_ms": 3.879}
+{"ts": "2025-08-16T17:51:13.052047+00:00", "event": "request", "method": "notifications/initialized", "id": null, "has_params": false}
+{"ts": "2025-08-16T17:51:13.057114+00:00", "event": "info", "msg": "Cliente indicó initialized."}
+{"ts": "2025-08-16T17:51:13.060168+00:00", "event": "response", "method": "notifications/initialized", "id": null, "duration_ms": 8.256}
+{"ts": "2025-08-16T17:51:13.065025+00:00", "event": "request", "method": "tools/list", "id": 2, "has_params": true}
+{"ts": "2025-08-16T17:51:13.069295+00:00", "event": "response", "method": "tools/list", "id": 2, "duration_ms": 4.822}
+{"ts": "2025-08-16T17:51:13.073206+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{"}
+{"ts": "2025-08-16T17:51:13.077657+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"name\":\"json_validate\","}
+{"ts": "2025-08-16T17:51:13.079993+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"arguments\":{"}
+{"ts": "2025-08-16T17:51:13.084751+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"data\":{"}
+{"ts": "2025-08-16T17:51:13.087924+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"name\":\"Ana\","}
+{"ts": "2025-08-16T17:51:13.092047+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"age\":25,"}
+{"ts": "2025-08-16T17:51:13.096300+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"email\":\"ana@example.com\","}
+{"ts": "2025-08-16T17:51:13.099393+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"tags\":[\"ml\",\"ia\"],"}
+{"ts": "2025-08-16T17:51:13.103093+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"admin\":false"}
+{"ts": "2025-08-16T17:51:13.107061+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "},"}
+{"ts": "2025-08-16T17:51:13.110303+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"schema\":{"}
+{"ts": "2025-08-16T17:51:13.115408+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"required\":[\"name\",\"age\",\"email\"],"}
+{"ts": "2025-08-16T17:51:13.119162+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"allowAdditionalProperties\": false,"}
+{"ts": "2025-08-16T17:51:13.122772+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"properties\":{"}
+{"ts": "2025-08-16T17:51:13.126449+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"name\":{\"type\":\"string\",\"min\":1,\"max\":50},"}
+{"ts": "2025-08-16T17:51:13.129681+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"age\":{\"type\":\"integer\",\"min\":18,\"max\":120},"}
+{"ts": "2025-08-16T17:51:13.133599+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"email\":{\"type\":\"string\",\"pattern\":\"^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$\"},"}
+{"ts": "2025-08-16T17:51:13.137959+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"tags\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":5,\"items\":{\"type\":\"string\"}},"}
+{"ts": "2025-08-16T17:51:13.141640+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"admin\":{\"type\":\"boolean\",\"nullable\":true}"}
+{"ts": "2025-08-16T17:51:13.145924+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "}"}
+{"ts": "2025-08-16T17:51:13.150184+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "}"}
+{"ts": "2025-08-16T17:51:13.152919+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "}"}
+{"ts": "2025-08-16T17:51:13.157635+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "}}"}
+{"ts": "2025-08-16T17:51:13.159933+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\",\"params\":{"}
+{"ts": "2025-08-16T17:51:13.164175+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"name\":\"json_validate\","}
+{"ts": "2025-08-16T17:51:13.168443+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"arguments\":{"}
+{"ts": "2025-08-16T17:51:13.171706+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"data\":{\"name\":\"\",\"age\":-1,\"email\":\"mal\",\"extra\":123},"}
+{"ts": "2025-08-16T17:51:13.176032+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"schema\":{"}
+{"ts": "2025-08-16T17:51:13.179187+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"required\":[\"name\",\"age\",\"email\"],"}
+{"ts": "2025-08-16T17:51:13.183441+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"allowAdditionalProperties\": false,"}
+{"ts": "2025-08-16T17:51:13.186606+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"properties\":{"}
+{"ts": "2025-08-16T17:51:13.191445+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"name\":{\"type\":\"string\",\"min\":1},"}
+{"ts": "2025-08-16T17:51:13.194700+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"age\":{\"type\":\"integer\",\"min\":0},"}
+{"ts": "2025-08-16T17:51:13.199523+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "\"email\":{\"type\":\"string\",\"pattern\":\"^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$\"}"}
+{"ts": "2025-08-16T17:51:13.202930+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "}"}
+{"ts": "2025-08-16T17:51:13.206465+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "}"}
+{"ts": "2025-08-16T17:51:13.210761+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "}"}
+{"ts": "2025-08-16T17:51:13.215064+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "}}"}
+{"ts": "2025-08-16T17:51:13.219124+00:00", "event": "request", "method": "shutdown", "id": 5, "has_params": false}
+{"ts": "2025-08-16T17:51:13.222937+00:00", "event": "info", "msg": "Recibido shutdown. Cerrando servidor."}
+{"ts": "2025-08-16T17:51:13.227397+00:00", "event": "response", "method": "shutdown", "id": 5, "duration_ms": 8.272}
+{"ts": "2025-08-16T17:51:13.231012+00:00", "event": "shutdown", "msg": "Servidor MCP stdio detenido"}

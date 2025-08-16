@@ -1,0 +1,19 @@
+{"ts": "2025-08-16T17:42:18.323826+00:00", "event": "startup", "msg": "Servidor MCP stdio iniciado"}
+{"ts": "2025-08-16T17:42:26.303914+00:00", "event": "error", "where": "transport_stdio", "msg": "JSON inválido", "sample": "$req = @'"}
+{"ts": "2025-08-16T17:42:26.342630+00:00", "event": "request", "method": "initialize", "id": 1, "has_params": true}
+{"ts": "2025-08-16T17:42:26.346868+00:00", "event": "response", "method": "initialize", "id": 1, "duration_ms": 4.514}
+{"ts": "2025-08-16T17:42:26.360911+00:00", "event": "request", "method": "notifications/initialized", "id": null, "has_params": false}
+{"ts": "2025-08-16T17:42:26.365191+00:00", "event": "info", "msg": "Cliente indicó initialized."}
+{"ts": "2025-08-16T17:42:26.367974+00:00", "event": "response", "method": "notifications/initialized", "id": null, "duration_ms": 7.421}
+{"ts": "2025-08-16T17:42:26.373964+00:00", "event": "request", "method": "tools/list", "id": 2, "has_params": true}
+{"ts": "2025-08-16T17:42:26.378260+00:00", "event": "response", "method": "tools/list", "id": 2, "duration_ms": 3.609}
+{"ts": "2025-08-16T17:42:26.403527+00:00", "event": "request", "method": "tools/call", "id": 3, "has_params": true}
+{"ts": "2025-08-16T17:42:26.407771+00:00", "event": "response", "method": "tools/call", "id": 3, "duration_ms": 3.645}
+{"ts": "2025-08-16T17:42:26.419446+00:00", "event": "request", "method": "tools/call", "id": 4, "has_params": true}
+{"ts": "2025-08-16T17:42:26.423195+00:00", "event": "response", "method": "tools/call", "id": 4, "duration_ms": 4.34}
+{"ts": "2025-08-16T17:42:26.428608+00:00", "event": "request", "method": "ping", "id": 5, "has_params": false}
+{"ts": "2025-08-16T17:42:26.432870+00:00", "event": "response", "method": "ping", "id": 5, "duration_ms": 4.399}
+{"ts": "2025-08-16T17:42:26.438056+00:00", "event": "request", "method": "shutdown", "id": 6, "has_params": false}
+{"ts": "2025-08-16T17:42:26.442568+00:00", "event": "info", "msg": "Recibido shutdown. Cerrando servidor."}
+{"ts": "2025-08-16T17:42:26.446301+00:00", "event": "response", "method": "shutdown", "id": 6, "duration_ms": 8.645}
+{"ts": "2025-08-16T17:42:26.449339+00:00", "event": "shutdown", "msg": "Servidor MCP stdio detenido"}

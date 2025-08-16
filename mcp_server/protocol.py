@@ -1,17 +1,40 @@
-import sys, json, traceback
+import sys, json, traceback, os, time
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from .tools import TOOLS, TOOL_IMPL
 
 PROTOCOL_VERSION = "2025-06-18"
 
-# -------- Helpers JSON-RPC / logging ----------
+# -------- Config de logging ----------
+LOG_FILE = os.environ.get("MCP_LOG_FILE", os.path.join("logs", "mcp_server.log"))
+LOG_LEVEL = os.environ.get("MCP_LOG_LEVEL", "INFO").upper()  # INFO|DEBUG|ERROR
+
+def _ensure_log_dir():
+    d = os.path.dirname(LOG_FILE)
+    if d and not os.path.exists(d):
+        os.makedirs(d, exist_ok=True)
+
+def now_ts() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+def _writeline(s: str) -> None:
+    try:
+        _ensure_log_dir()
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(s + "\n")
+    except Exception:
+        pass
+    sys.stderr.write(s + "\n")
+    sys.stderr.flush()
+
+def log_json(event: str, **fields: Any) -> None:
+    rec = {"ts": now_ts(), "event": event}
+    rec.update(fields)
+    _writeline(json.dumps(rec, ensure_ascii=False))
+
 def jprint(obj: Dict[str, Any]) -> None:
     sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")
     sys.stdout.flush()
-
-def log(msg: str) -> None:
-    sys.stderr.write(msg.rstrip() + "\n")
-    sys.stderr.flush()
 
 def rsp_result(_id: Any, result: Dict[str, Any]) -> Dict[str, Any]:
     return {"jsonrpc": "2.0", "id": _id, "result": result}
@@ -27,25 +50,26 @@ def handle_request(req: Dict[str, Any]) -> Optional[bool]:
     """
     Retorna True si se debe terminar (shutdown), None/False en caso contrario.
     """
+    t0 = time.perf_counter()
     method = req.get("method")
     _id = req.get("id")
     is_notification = _id is None
 
+    log_json("request", method=method, id=_id, has_params=("params" in req))
+
     try:
         if method == "initialize":
-            jprint(rsp_result(_id, {
+            result = {
                 "protocolVersion": PROTOCOL_VERSION,
-                "capabilities": {
-                    "tools": {"listChanged": True},
-                    "logging": {}
-                },
-                "serverInfo": {"name": "uvg-mcp-local", "title": "UVG MCP Local Server", "version": "0.3.0"},
+                "capabilities": {"tools": {"listChanged": True}, "logging": {}},
+                "serverInfo": {"name": "uvg-mcp-local", "title": "UVG MCP Local Server", "version": "0.3.1"},
                 "instructions": "Servidor MCP de ejemplo (sum, grep_lines, sha256)."
-            }))
+            }
+            jprint(rsp_result(_id, result))
             return None
 
         if method == "notifications/initialized":
-            log("[MCP] Cliente indicó initialized.")
+            log_json("info", msg="Cliente indicó initialized.")
             return None
 
         if method in ("ping", "notifications/ping"):
@@ -56,11 +80,12 @@ def handle_request(req: Dict[str, Any]) -> Optional[bool]:
         if method == "shutdown":
             if not is_notification:
                 jprint(rsp_result(_id, {"ok": True}))
-            log("[MCP] Recibido shutdown. Cerrando servidor.")
+            log_json("info", msg="Recibido shutdown. Cerrando servidor.")
             return True
 
         if method == "tools/list":
-            jprint(rsp_result(_id, {"tools": TOOLS, "nextCursor": None}))
+            result = {"tools": TOOLS, "nextCursor": None}
+            jprint(rsp_result(_id, result))
             return None
 
         if method == "tools/call":
@@ -68,27 +93,38 @@ def handle_request(req: Dict[str, Any]) -> Optional[bool]:
             name = params.get("name")
             arguments = params.get("arguments", {})
             if not isinstance(name, str):
-                jprint(rsp_error(_id, -32602, "Invalid 'name' for tools/call"))
+                err = rsp_error(_id, -32602, "Invalid 'name' for tools/call")
+                jprint(err)
                 return None
             impl = TOOL_IMPL.get(name)
             if impl is None:
-                jprint(rsp_error(_id, -32601, f"Unknown tool: {name}"))
+                err = rsp_error(_id, -32601, f"Unknown tool: {name}")
+                jprint(err)
                 return None
             result = impl(arguments)
             jprint(rsp_result(_id, result))
             return None
 
-        # Método desconocido
         if not is_notification:
-            jprint(rsp_error(_id, -32601, f"Method not found: {method}"))
+            err = rsp_error(_id, -32601, f"Method not found: {method}")
+            jprint(err)
         else:
-            log(f"[MCP] Notificación desconocida: {method}")
+            log_json("warn", msg="Notificación desconocida", method=method)
 
     except ValueError as ve:
         if _id is not None:
-            jprint(rsp_error(_id, -32602, "Invalid params", {"detail": str(ve)}))
+            err = rsp_error(_id, -32602, "Invalid params", {"detail": str(ve)})
+            jprint(err)
+        log_json("error", where="handle_request", method=method, id=_id, detail=str(ve))
     except Exception:
-        log("[MCP] Exception:\n" + traceback.format_exc())
+        tb = traceback.format_exc()
         if _id is not None:
-            jprint(rsp_error(_id, -32000, "Internal server error"))
+            err = rsp_error(_id, -32000, "Internal server error")
+            jprint(err)
+        log_json("error", where="handle_request", method=method, id=_id, traceback=tb)
+    finally:
+        dt = time.perf_counter() - t0
+        # Log de salida con duración
+        log_json("response", method=method, id=_id, duration_ms=round(dt * 1000, 3))
+
     return None

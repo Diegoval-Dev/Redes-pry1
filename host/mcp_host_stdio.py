@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
 import json, subprocess, sys, os, time, shutil, shlex, platform
 from typing import List, Dict, Any, Optional
+from dotenv import load_dotenv
+
 
 JSONRPC = "2.0"
 PROTOCOL_VERSION = "2025-06-18"
@@ -71,9 +72,14 @@ def tools_list(server: MCPProcess) -> List[Dict[str, Any]]:
 def tools_call(server: MCPProcess, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
     server.send({"jsonrpc": JSONRPC, "id": 3, "method": "tools/call", "params": {"name": name, "arguments": arguments}})
     rsp = server.recv()
-    if rsp and "result" in rsp:
+    if not rsp:
+        raise RuntimeError(f"tools/call {name} timed out")
+    if "result" in rsp:
         return rsp["result"]
-    raise RuntimeError(f"tools/call {name} failed")
+    if "error" in rsp:
+        raise RuntimeError(f"tools/call {name} error: {json.dumps(rsp['error'], ensure_ascii=False)}")
+    raise RuntimeError(f"tools/call {name} unexpected response: {json.dumps(rsp, ensure_ascii=False)}")
+
 
 def _flatten_args(nested: List[List[str]]) -> List[str]:
     # Convierte [[-y], [@pkg], [path con espacios]] -> [-y, @pkg, path...]
@@ -98,6 +104,7 @@ def _resolve_executable(cmd: str) -> Optional[str]:
     return None
 
 def main():
+    load_dotenv()
     import argparse
     ap = argparse.ArgumentParser(description="Host MCP mínimo (stdio)")
     ap.add_argument("--cmd", required=True, help="Comando del servidor (ej. npx)")
@@ -150,6 +157,7 @@ def main():
 
     finally:
         server.close()
+
 
 if __name__ == "__main__":
     main()

@@ -24,3 +24,22 @@
 {"dir": "out", "obj": {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "read_text_file", "arguments": {"path": "D:/cosas/programass/UVG/Redes/pry1/Filesystem/hola.txt", "head": 200}}}}
 {"dir": "in", "obj": {"result": {"content": [{"type": "text", "text": "hola"}]}, "jsonrpc": "2.0", "id": 4}}
 {"dir": "out", "obj": {"jsonrpc": "2.0", "id": 5, "method": "shutdown"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2025-06-18", "capabilities": {"tools": {}}, "serverInfo": {"name": "secure-filesystem-server", "version": "0.2.0"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "list_directory", "arguments": {"path": "D:/cosas/programass/UVG/Redes/pry1/Filesystem", "recursive": false}}}}
+{"dir": "in", "obj": {"result": {"content": [{"type": "text", "text": "[FILE] hola.txt\n[FILE] test.txt"}]}, "jsonrpc": "2.0", "id": 2}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "list_directory", "arguments": {"path": "FS_ROOT", "recursive": false}}}}
+{"dir": "in", "obj": {"result": {"content": [{"type": "text", "text": "Error: Access denied - path outside allowed directories: D:\\cosas\\programass\\UVG\\Redes\\pry1\\FS_ROOT not in D:\\cosas\\programass\\UVG\\Redes\\pry1\\Filesystem"}], "isError": true}, "jsonrpc": "2.0", "id": 3}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 4, "method": "shutdown"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2025-06-18", "capabilities": {"tools": {}}, "serverInfo": {"name": "secure-filesystem-server", "version": "0.2.0"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 2, "method": "shutdown"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2025-06-18", "capabilities": {"tools": {}}, "serverInfo": {"name": "secure-filesystem-server", "version": "0.2.0"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "list_directory", "arguments": {"path": "D:/cosas/programass/UVG/Redes/pry1/Filesystem", "recursive": false}}}}
+{"dir": "in", "obj": {"result": {"content": [{"type": "text", "text": "[FILE] hola.txt\n[FILE] test.txt"}]}, "jsonrpc": "2.0", "id": 2}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "list_directory", "arguments": {"path": "D:/cosas/programass/UVG/Redes/pry1/Filesystem", "recursive": false}}}}
+{"dir": "in", "obj": {"result": {"content": [{"type": "text", "text": "[FILE] hola.txt\n[FILE] test.txt"}]}, "jsonrpc": "2.0", "id": 3}}

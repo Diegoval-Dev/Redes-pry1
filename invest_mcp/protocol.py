@@ -65,7 +65,7 @@ def handle_request(req: Dict[str, Any]) -> Optional[bool]:
                 "capabilities": {"tools": {"listChanged": True}, "logging": {}},
                 "serverInfo": {
                     "name": "uvg-invest-mcp-local",
-                    "title": "UVG MCP Inversiones (Local)",
+                    "title": "UVG MCP Inversiones (Local) by Diegoval-dev",
                     "version": "0.1.0"
                 },
                 "instructions": (

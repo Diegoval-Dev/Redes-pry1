@@ -53,13 +53,32 @@ def _pstdev(rets: List[float]) -> float:
     return (sum((x-m)**2 for x in rets)/len(rets))**0.5
 
 def _cov_matrix(series: List[List[float]]) -> List[List[float]]:
+    """
+    series: lista de n activos, cada uno con lista de retornos diarios.
+    Devuelve covarianza muestral (poblacional) por día, alineando a T común.
+    """
     n = len(series)
-    mus = [_mean(s) for s in series]
-    C = [[0.0]*n for _ in range(n)]
+    if n < 2:
+        raise ValueError("Se requieren al menos 2 series para covarianza")
+
+    T = min(len(s) for s in series)
+    if T < 2:
+        raise ValueError("Cada serie debe tener al menos 2 puntos")
+
+    S = [s[:T] for s in series]
+    mus = [sum(s) / T for s in S]
+
+    C = [[0.0] * n for _ in range(n)]
     for i in range(n):
         for j in range(n):
-            C[i][j] = sum((series[k][i]-mus[i])*(series[k][j]-mus[j]) for k in range(len(series[0]))) / len(series[0])
+            acc = 0.0
+            mi, mj = mus[i], mus[j]
+            si, sj = S[i], S[j]
+            for t in range(T):
+                acc += (si[t] - mi) * (sj[t] - mj)
+            C[i][j] = acc / T
     return C
+
 
 def _matvec(C: List[List[float]], w: List[float]) -> List[float]:
     return [sum(C[i][j]*w[j] for j in range(len(w))) for i in range(len(w))]

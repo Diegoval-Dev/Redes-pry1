@@ -13,10 +13,10 @@ def log_chat(role: str, content: str):
         f.write(json.dumps({"role":role,"content":content}, ensure_ascii=False) + "\n")
 
 def parse_tool_line(line: str):
-    if not line.startswith(("!fs","!gh","!local")): return None
+    if not line.startswith(("!fs","!gh","!local","!inv")): return None
     try:
         prefix, rest = line.split(" ",1)
-        return prefix[1:], json.loads(rest)  # ("fs"/"gh"/"local"), {"tool":..,"args":..}
+        return prefix[1:], json.loads(rest)  
     except Exception:
         return None
 
@@ -34,7 +34,8 @@ def main():
         "Comandos:\n"
         "  !fs {\"tool\":\"list_directory\",\"args\":{\"path\":\"D:/...\",\"recursive\":false}}\n"
         "  !gh {\"tool\":\"list_commits\",\"args\":{\"owner\":\"...\",\"repo\":\"...\",\"sha\":\"main\"}}\n"
-        "  !local {\"tool\":\"json_validate\", ...}",
+        "  !local {\"tool\":\"json_validate\", ...}\n"
+        "  !inv {\"tool\":\"price_quote\",\"args\":{\"symbols\":[\"BTC\",\"ETH\",\"SPY\",\"GLD\"],\"useLive\":true}}\n",  # 👈 ayuda
         title="MCP Chat")
     )
 
@@ -51,6 +52,7 @@ def main():
                 try:
                     if kind=="fs":   res = fleet.fs.tools_call(tool, args)
                     elif kind=="gh": res = fleet.gh.tools_call(tool, args)
+                    elif kind=="inv":res = fleet.invest.tools_call(tool, args)
                     else:            res = fleet.local.tools_call(tool, args)
                     console.print(Panel.fit(pretty(res), title=f"{kind}:{tool} ✓"))
                     log_chat("tool", f"{kind}:{tool} -> {pretty(res)}")
@@ -75,6 +77,7 @@ def main():
                 try:
                     if kind=="fs":   res = fleet.fs.tools_call(tool, args)
                     elif kind=="gh": res = fleet.gh.tools_call(tool, args)
+                    elif kind=="inv":res = fleet.invest.tools_call(tool, args)
                     else:            res = fleet.local.tools_call(tool, args)
                     executed = True
                     console.print(Panel.fit(pretty(res), title=f"{kind}:{tool} ✓"))

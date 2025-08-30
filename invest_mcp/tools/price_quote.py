@@ -47,7 +47,7 @@ def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
         except Exception:
             hist = {}
 
-    # 1) Si hay histórico de alguno, úsalo para retornos; last será sobreescrito por spot si cripto
+    # 1) Si hay histórico, úsalo (después sobreescribimos 'last' vía spot cuando aplique)
     if hist:
         for q in last_and_returns(hist):
             sym = q["symbol"]
@@ -59,7 +59,7 @@ def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
 
     have = {q["symbol"] for q in quotes}
 
-    # 2) Para cualquier CRYPTO solicitada (tenga o no histórico), pedir spot a /simple/price
+    # 2) CRYPTO: spot aunque no haya hist
     crypto_syms = [s for s in syms if s in COINGECKO_IDS]
     need_spot = [s for s in crypto_syms if s not in have]
     if use_live and need_spot:
@@ -70,7 +70,7 @@ def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
                     "symbol": s,
                     "name": UNIVERSE.get(s, {}).get("name", s),
                     "last": float(spot[s]),
-                    "ret1d": 0.0, "ret7d": 0.0, "ret30d": 0.0,  # sin hist no estimamos retornos
+                    "ret1d": 0.0, "ret7d": 0.0, "ret30d": 0.0,
                     "currency": "USD",
                     "source": "live-spot"
                 })
@@ -78,7 +78,23 @@ def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
 
     have = {q["symbol"] for q in quotes}
 
-    # 3) Completar lo que falte con sintético (como último recurso)
+    # 2.5) COMPLETAR retornos para 'live-spot' usando /coins/markets (24h/7d/30d)
+    spot_cryptos = [q["symbol"] for q in quotes
+                    if q.get("source") == "live-spot" and q["symbol"] in COINGECKO_IDS]
+    if use_live and spot_cryptos:
+        from invest_mcp.lib.data_live import fetch_cg_markets_changes
+        chg = fetch_cg_markets_changes(spot_cryptos, vs="usd") or {}
+        for q in quotes:
+            s = q["symbol"]
+            if q.get("source") == "live-spot" and s in chg:
+                if q.get("ret1d", 0.0) == 0.0 and "ret1d" in chg[s]:
+                    q["ret1d"]  = chg[s]["ret1d"]
+                if q.get("ret7d", 0.0) == 0.0 and "ret7d" in chg[s]:
+                    q["ret7d"]  = chg[s]["ret7d"]
+                if q.get("ret30d", 0.0) == 0.0 and "ret30d" in chg[s]:
+                    q["ret30d"] = chg[s]["ret30d"]
+
+    # 3) Fallback sintético
     missing = [s for s in syms if s not in have]
     if missing:
         prices = get_builtin_prices()
@@ -94,13 +110,12 @@ def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
                 "ret1d": _ret(ps,1),
                 "ret7d": _ret(ps,5),
                 "ret30d": _ret(ps,21),
-                # currency del builtin puede no ser USD; por eso lo marcamos:
                 "currency": UNIVERSE.get(s, {}).get("currency", "UNKNOWN"),
                 "source": "synthetic"
             })
             synthetic_count += 1
 
-    # 4) Etiqueta de dataSource global
+    # 4) dataSource global
     if live_count and synthetic_count:
         ds = "mixed"
     elif live_count:

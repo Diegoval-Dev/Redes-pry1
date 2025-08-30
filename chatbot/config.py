@@ -13,8 +13,11 @@ GITHUB_PERSONAL_ACCESS_TOKEN = (
     or os.getenv("GH_TOKEN")
 )
 
-FS_ROOT = os.getenv("FS_ROOT", "D:/cosas/programass/UVG/Redes/pry1/Filesystem")
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
+FS_ROOT = os.getenv("FS_ROOT", os.path.join(PROJECT_ROOT, "Filesystem"))
+
+os.makedirs(FS_ROOT, exist_ok=True)
 LOG_DIR = os.getenv("CHAT_LOG_DIR", "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 CHAT_LOG_FILE = os.path.join(LOG_DIR, "chat_host.jsonl")

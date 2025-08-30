@@ -1,5 +1,5 @@
 # chatbot/mcp_runtime.py
-import os, json, time, subprocess, shutil, platform
+import os, json, time, subprocess, shutil, platform, io
 from typing import Dict, Any, Optional, List
 from .config import LOG_DIR, FS_ROOT
 
@@ -19,6 +19,15 @@ def _log_jsonl(path: str, obj: Dict[str, Any]):
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
+def _read_all_safe(stream: Optional[io.TextIOBase]) -> str:
+    try:
+        if not stream:
+            return ""
+        # Si el proceso ya terminó, .read() no bloquea y devuelve todo
+        return stream.read() or ""
+    except Exception:
+        return ""
+
 class MCPServer:
     def __init__(self, name: str, launch: List[str], env: Optional[Dict[str,str]] = None):
         self.name = name
@@ -29,33 +38,66 @@ class MCPServer:
         self.log_file = os.path.join(LOG_DIR, f"mcp_{name}.jsonl")
 
     def start(self):
-        if self.proc and self.proc.poll() is None: return
-        exe = _which(self.launch[0]) or self.launch[0]
+        if self.proc and self.proc.poll() is None: 
+            return
+
+        exe = _which(self.launch[0])
         use_shell = False
-        if not _which(self.launch[0]) and platform.system().lower().startswith("win"):
-            use_shell = True
+        popen_cmd = None
+
+        if exe:
+            popen_cmd = [exe] + self.launch[1:]
+        else:
+            # En Windows, si no resolvió, usa shell para que resuelva .cmd
+            if platform.system().lower().startswith("win"):
+                use_shell = True
+                popen_cmd = " ".join(self.launch)
+            else:
+                # En Unix preferimos fallar explícito
+                raise FileNotFoundError(f"[{self.name}] Executable not found in PATH: {self.launch[0]}")
+
         self.proc = subprocess.Popen(
-            ([exe] + self.launch[1:]) if not use_shell else " ".join(self.launch),
+            popen_cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, bufsize=1, env=self.env, shell=use_shell
         )
+
+        # Si el proceso muere instantáneo, detecta antes de inicializar
+        time.sleep(0.05)
+        if self.proc.poll() is not None:
+            stderr_text = _read_all_safe(self.proc.stderr)
+            raise RuntimeError(f"[{self.name}] failed to start (exit={self.proc.returncode}). Stderr:\n{stderr_text}")
+
         self._initialize()
 
     def _send(self, obj: Dict[str, Any]):
-        assert self.proc and self.proc.stdin
-        self.proc.stdin.write(json.dumps(obj, ensure_ascii=False) + "\n")
-        self.proc.stdin.flush()
-        _log_jsonl(self.log_file, {"dir":"out","obj":obj})
+        if not (self.proc and self.proc.stdin):
+            raise RuntimeError(f"[{self.name}] process not running / stdin closed")
+        line = json.dumps(obj, ensure_ascii=False) + "\n"
+        try:
+            self.proc.stdin.write(line)
+            self.proc.stdin.flush()
+            _log_jsonl(self.log_file, {"dir":"out","obj":obj})
+        except OSError as e:
+            # Captura stderr para mensaje útil
+            stderr_text = _read_all_safe(self.proc.stderr)
+            raise RuntimeError(f"[{self.name}] write to stdin failed: {e}\nChild stderr:\n{stderr_text}") from e
 
     def _recv(self, timeout: float = 20.0) -> Optional[Dict[str, Any]]:
-        assert self.proc and self.proc.stdout
+        if not (self.proc and self.proc.stdout):
+            return None
         t0 = time.time()
         while time.time() - t0 < timeout:
             line = self.proc.stdout.readline()
             if not line:
-                time.sleep(0.01); continue
+                # si el proceso murió, rompe
+                if self.proc.poll() is not None:
+                    break
+                time.sleep(0.01); 
+                continue
             line = line.strip()
-            if not line: continue
+            if not line: 
+                continue
             try:
                 msg = json.loads(line)
                 _log_jsonl(self.log_file, {"dir":"in","obj":msg})
@@ -65,22 +107,33 @@ class MCPServer:
         return None
 
     def _initialize(self):
+        # initialize
         self.seq += 1
         self._send({"jsonrpc":JSONRPC,"id":self.seq,"method":"initialize",
                     "params":{"protocolVersion":PROTO,"capabilities":{},
                               "clientInfo":{"name":"ChatHost","version":"0.1"}}})
-        _ = self._recv()
-        self._send({"jsonrpc":JSONRPC,"method":"notifications/initialized"})
+        rsp = self._recv()
+        if not rsp or "result" not in rsp:
+            stderr_text = _read_all_safe(self.proc.stderr)
+            raise RuntimeError(f"[{self.name}] initialize failed. Child stderr:\n{stderr_text}")
+        # notifications/initialized
+        try:
+            self._send({"jsonrpc":JSONRPC,"method":"notifications/initialized"})
+        except RuntimeError as e:
+            # Propaga con stderr ya incluido
+            raise
 
     def tools_call(self, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:
         self.seq += 1
         self._send({"jsonrpc":JSONRPC,"id":self.seq,"method":"tools/call",
                     "params":{"name":tool,"arguments":args}})
         rsp = self._recv()
-        if not rsp: raise RuntimeError(f"{self.name}: timeout")
+        if not rsp: 
+            stderr_text = _read_all_safe(self.proc.stderr)
+            raise RuntimeError(f"[{self.name}] timeout waiting response. Child stderr:\n{stderr_text}")
         if "result" in rsp: return rsp["result"]
-        if "error" in rsp: raise RuntimeError(f"{self.name}: {rsp['error']}")
-        raise RuntimeError(f"{self.name}: unexpected {rsp}")
+        if "error" in rsp: raise RuntimeError(f"[{self.name}] {json.dumps(rsp['error'], ensure_ascii=False)}")
+        raise RuntimeError(f"[{self.name}] unexpected {rsp}")
 
 class MCPFleet:
     def __init__(self):
@@ -92,7 +145,12 @@ class MCPFleet:
 
     def start_all(self):
         if self._started: return
-        self.fs.start(); self.gh.start(); self.local.start(); self.invest.start()
+        # Arranca uno por uno, con diagnóstico
+        for s in (self.fs, self.gh, self.local, self.invest):
+            try:
+                s.start()
+            except Exception as e:
+                raise RuntimeError(f"Failed starting MCP server '{s.name}': {e}") from e
         self._started = True
 
     def stop_all(self):
@@ -100,7 +158,9 @@ class MCPFleet:
             try:
                 s.seq += 1
                 s._send({"jsonrpc":JSONRPC,"id":s.seq,"method":"shutdown"})
-            except Exception: pass
+            except Exception:
+                pass
             try:
                 if s.proc: s.proc.terminate()
-            except Exception: pass
+            except Exception:
+                pass

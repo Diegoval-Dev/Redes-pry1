@@ -21,3 +21,6 @@ os.makedirs(FS_ROOT, exist_ok=True)
 LOG_DIR = os.getenv("CHAT_LOG_DIR", "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 CHAT_LOG_FILE = os.path.join(LOG_DIR, "chat_host.jsonl")
+
+REMOTE_MCP_URL = os.getenv("REMOTE_MCP_URL")
+REMOTE_MCP_PATH = os.getenv("REMOTE_MCP_PATH", "/rpc")

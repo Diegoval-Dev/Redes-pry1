@@ -1,7 +1,9 @@
 # chatbot/mcp_runtime.py
 import os, json, time, subprocess, shutil, platform, io
 from typing import Dict, Any, Optional, List
-from .config import LOG_DIR, FS_ROOT
+from .config import LOG_DIR, FS_ROOT, REMOTE_MCP_URL, REMOTE_MCP_PATH
+import requests
+
 
 JSONRPC = "2.0"
 PROTO = "2025-06-18"
@@ -134,12 +136,73 @@ class MCPServer:
         if "result" in rsp: return rsp["result"]
         if "error" in rsp: raise RuntimeError(f"[{self.name}] {json.dumps(rsp['error'], ensure_ascii=False)}")
         raise RuntimeError(f"[{self.name}] unexpected {rsp}")
+    
+class MCPHttpServer:
+    def __init__(self, name: str, base_url: str, rpc_path: str = "/rpc"):
+        self.name = name
+        self.base_url = base_url.rstrip("/")
+        self.rpc_url = self.base_url + (rpc_path if rpc_path.startswith("/") else f"/{rpc_path}")
+        self.seq = 0
+
+    def _send(self, obj: dict) -> dict:
+        try:
+            resp = requests.post(
+                self.rpc_url,
+                headers={"Content-Type": "application/json"},
+                json=obj,
+                timeout=20,
+            )
+            # si hay error http, muestra cuerpo para diagnóstico
+            try:
+                resp.raise_for_status()
+            except requests.HTTPError as e:
+                raise RuntimeError(
+                    f"[{self.name}] HTTP {resp.status_code} at {self.rpc_url}\nBody: {resp.text}"
+                ) from e
+            return resp.json()
+        except requests.RequestException as e:
+            raise RuntimeError(f"[{self.name}] HTTP request failed: {e}") from e
+
+    def _initialize(self):
+        self.seq += 1
+        init_req = {
+            "jsonrpc": "2.0",
+            "id": self.seq,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2025-06-18",
+                "capabilities": {},
+                "clientInfo": {"name": "ChatHost", "version": "0.1"},
+            },
+        }
+        _ = self._send(init_req)
+        # notificación opcional
+        notif = {"jsonrpc": "2.0", "method": "notifications/initialized"}
+        self._send(notif)
+
+    def start(self):
+        self._initialize()
+
+    def tools_call(self, tool: str, args: dict) -> dict:
+        self.seq += 1
+        req = {
+            "jsonrpc": "2.0",
+            "id": self.seq,
+            "method": "tools/call",
+            "params": {"name": tool, "arguments": args},
+        }
+        rsp = self._send(req)
+        if "result" in rsp:
+            return rsp["result"]
+        if "error" in rsp:
+            raise RuntimeError(f"{self.name}: {rsp['error']}")
+        raise RuntimeError(f"{self.name}: unexpected {rsp}")
 
 class MCPFleet:
     def __init__(self):
         self.fs = MCPServer("filesystem", ["npx","-y","@modelcontextprotocol/server-filesystem", FS_ROOT])
         self.gh = MCPServer("github", ["npx","-y","@modelcontextprotocol/server-github"])
-        self.local = MCPServer("local", ["python","main.py"])
+        self.local = MCPHttpServer("local-remote", REMOTE_MCP_URL)
         self.invest = MCPServer("invest", ["python","-m","invest_mcp.main"])
         self._started = False
 

@@ -9,6 +9,7 @@ SYSTEM_PROMPT = (
     "!fs {\"tool\":\"list_directory\",\"args\":{\"path\":\"D:/...\",\"recursive\":false}}\n"
     "!gh {\"tool\":\"list_commits\",\"args\":{\"owner\":\"...\",\"repo\":\"...\",\"sha\":\"main\"}}\n"
     "!local {\"tool\":\"json_validate\", ...}\n"
+    "!inv {\"tool\":\"price_quote\",\"args\":{\"symbols\":[\"BTC\",\"ETH\",\"SPY\",\"GLD\"],\"useLive\":true}}\n"
     "No inventes parámetros. Si faltan, pídelo."
 )
 

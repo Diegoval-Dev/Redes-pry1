@@ -171,6 +171,58 @@ def fetch_cg_history(symbols: List[str], days: int = 365, vs: str = "usd") -> Di
             continue
     return out
 
+def fetch_cg_markets_changes(symbols: List[str], vs: str = "usd") -> Dict[str, Dict[str, float]]:
+    """
+    Retorna {SYM: {"ret1d": d, "ret7d": d, "ret30d": d}} en decimales (no %).
+    Solo para símbolos mapeados a COINGECKO_IDS.
+    """
+    out: Dict[str, Dict[str, float]] = {}
+    if not symbols:
+        return out
+    ids = [COINGECKO_IDS[s] for s in symbols if s in COINGECKO_IDS]
+    if not ids:
+        return out
+
+    base, headers, q, mode = _cg_base_and_auth()
+    key = f"cg_markets_changes:{','.join(sorted(ids))}:{vs}:{mode}"
+    cached = cache_load(key, ttl_seconds=60)  
+    if cached is not None:
+        return cached
+
+    url = f"{base}/coins/markets"
+    params = {
+        "vs_currency": vs,
+        "ids": ",".join(ids),
+        "price_change_percentage": "24h,7d,30d",
+        **q
+    }
+    _d(f"GET {url} {params}")
+    try:
+        r = requests.get(url, params=params, headers=headers, timeout=15)
+        _d(f"-> status={r.status_code}")
+        r.raise_for_status()
+        data = r.json()
+        inv = {v: k for k, v in COINGECKO_IDS.items()}
+        for row in data if isinstance(data, list) else []:
+            cg_id = row.get("id")
+            sym = inv.get(cg_id)
+            if not sym:
+                continue
+            p24 = row.get("price_change_percentage_24h_in_currency")
+            p7  = row.get("price_change_percentage_7d_in_currency")
+            p30 = row.get("price_change_percentage_30d_in_currency")
+            ret = {}
+            if isinstance(p24, (int, float)): ret["ret1d"]  = float(p24) / 100.0
+            if isinstance(p7,  (int, float)): ret["ret7d"]  = float(p7)  / 100.0
+            if isinstance(p30, (int, float)): ret["ret30d"] = float(p30) / 100.0
+            if ret:
+                out[sym] = ret
+        cache_save(key, out)
+        return out
+    except Exception as e:
+        _d(f"coins/markets error: {e}")
+        return {}
+
 # -------- Utilidades --------
 def align_min_length(series_dict: Dict[str, List[float]]) -> Dict[str, List[float]]:
     if not series_dict: return {}

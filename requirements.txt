@@ -2,3 +2,7 @@ openai>=1.45.0
 python-dotenv>=1.0.1
 rich>=13.7.1
 streamlit
+yfinance>=0.2.52
+pandas>=2.2.2
+numpy>=1.26
+requests>=2.32

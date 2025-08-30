@@ -1,3 +1,4 @@
+# chatbot/mcp_runtime.py
 import os, json, time, subprocess, shutil, platform
 from typing import Dict, Any, Optional, List
 from .config import LOG_DIR, FS_ROOT
@@ -86,15 +87,16 @@ class MCPFleet:
         self.fs = MCPServer("filesystem", ["npx","-y","@modelcontextprotocol/server-filesystem", FS_ROOT])
         self.gh = MCPServer("github", ["npx","-y","@modelcontextprotocol/server-github"])
         self.local = MCPServer("local", ["python","main.py"])
+        self.invest = MCPServer("invest", ["python","-m","invest_mcp.main"])
         self._started = False
 
     def start_all(self):
         if self._started: return
-        self.fs.start(); self.gh.start(); self.local.start()
+        self.fs.start(); self.gh.start(); self.local.start(); self.invest.start()
         self._started = True
 
     def stop_all(self):
-        for s in (self.fs, self.gh, self.local):
+        for s in (self.fs, self.gh, self.local, self.invest):
             try:
                 s.seq += 1
                 s._send({"jsonrpc":JSONRPC,"id":s.seq,"method":"shutdown"})

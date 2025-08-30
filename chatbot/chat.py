@@ -32,14 +32,14 @@ def main():
 
     history: List[Dict[str,str]] = []
     console.print(Panel.fit(
-        "Chat MCP listo.\n"
-        "Comandos:\n"
-        "  !fs {\"tool\":\"list_directory\",\"args\":{\"path\":\"D:/...\",\"recursive\":false}}\n"
-        "  !gh {\"tool\":\"list_commits\",\"args\":{\"owner\":\"...\",\"repo\":\"...\",\"sha\":\"main\"}}\n"
-        "  !local {\"tool\":\"json_validate\", ...}\n"
-        "  !inv {\"tool\":\"price_quote\",\"args\":{\"symbols\":[\"BTC\",\"ETH\",\"SPY\",\"GLD\"],\"useLive\":true}}\n",  # 👈 ayuda
-        title="MCP Chat")
-    )
+    "Chat MCP listo.\n"
+    "Comandos:\n"
+    "  !fs {\"tool\":\"list_directory\",\"args\":{\"path\":\"D:/...\",\"recursive\":false}}\n"
+    "  !gh {\"tool\":\"list_commits\",\"args\":{\"owner\":\"...\",\"repo\":\"...\",\"sha\":\"main\"}}\n"
+    "  !local {\"tool\":\"json_validate\", ...}\n"
+    "  !invest {\"tool\":\"price_quote\",\"args\":{\"symbols\":[\"BTC\",\"ETH\",\"SPY\",\"GLD\"],\"useLive\":true}}\n",
+    title="MCP Chat"
+    ))
 
     try:
         while True:
@@ -54,7 +54,7 @@ def main():
                 try:
                     if kind=="fs":   res = fleet.fs.tools_call(tool, args)
                     elif kind=="gh": res = fleet.gh.tools_call(tool, args)
-                    elif kind=="inv":res = fleet.invest.tools_call(tool, args)
+                    elif kind=="invest": res = fleet.invest.tools_call(tool, args)
                     else:            res = fleet.local.tools_call(tool, args)
                     console.print(Panel.fit(pretty(res), title=f"{kind}:{tool} ✓"))
                     log_chat("tool", f"{kind}:{tool} -> {pretty(res)}")
@@ -79,7 +79,7 @@ def main():
                 try:
                     if kind=="fs":   res = fleet.fs.tools_call(tool, args)
                     elif kind=="gh": res = fleet.gh.tools_call(tool, args)
-                    elif kind=="inv":res = fleet.invest.tools_call(tool, args)
+                    elif kind=="invest": res = fleet.invest.tools_call(tool, args)
                     else:            res = fleet.local.tools_call(tool, args)
                     executed = True
                     console.print(Panel.fit(pretty(res), title=f"{kind}:{tool} ✓"))

@@ -45,3 +45,27 @@
 {"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
 {"dir": "in", "obj": {"result": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}, "serverInfo": {"name": "github-mcp-server", "version": "0.6.2"}}, "jsonrpc": "2.0", "id": 1}}
 {"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}, "serverInfo": {"name": "github-mcp-server", "version": "0.6.2"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}, "serverInfo": {"name": "github-mcp-server", "version": "0.6.2"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 2, "method": "shutdown"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}, "serverInfo": {"name": "github-mcp-server", "version": "0.6.2"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}, "serverInfo": {"name": "github-mcp-server", "version": "0.6.2"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}, "serverInfo": {"name": "github-mcp-server", "version": "0.6.2"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 2, "method": "shutdown"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}, "serverInfo": {"name": "github-mcp-server", "version": "0.6.2"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 2, "method": "shutdown"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"result": {"protocolVersion": "2024-11-05", "capabilities": {"tools": {}}, "serverInfo": {"name": "github-mcp-server", "version": "0.6.2"}}, "jsonrpc": "2.0", "id": 1}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}

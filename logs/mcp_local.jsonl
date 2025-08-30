@@ -29,3 +29,8 @@
 {"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
 {"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
 {"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "ChatHost", "version": "0.1"}}}}
+{"dir": "in", "obj": {"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2025-06-18", "capabilities": {"tools": {"listChanged": true}, "logging": {}}, "serverInfo": {"name": "uvg-mcp-local", "title": "UVG MCP Local Server by Diegoval-dev", "version": "0.3.1"}, "instructions": "Servidor MCP de ejemplo (sum, grep_lines, sha256)."}}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "method": "notifications/initialized"}}
+{"dir": "out", "obj": {"jsonrpc": "2.0", "id": 2, "method": "shutdown"}}

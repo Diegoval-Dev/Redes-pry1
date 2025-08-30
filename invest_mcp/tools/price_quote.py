@@ -1,35 +1,32 @@
-# invest_mcp/tools/risk_metrics.py
-import json, math, statistics
+import json
 from typing import Dict, Any, List
-from .data import get_builtin_prices
+from .data import get_builtin_prices, UNIVERSE  # fallback sintético
+from invest_mcp.lib.data_live import get_history, last_and_returns
 
 DEF = {
-    "name": "risk_metrics",
-    "title": "Métricas de riesgo y retorno",
-    "description": "Calcula retorno esperado anualizado, volatilidad anual y Sharpe para símbolos.",
+    "name": "price_quote",
+    "title": "Cotización (live con fallback)",
+    "description": "Devuelve último precio y retornos 1D/7D/30D usando yfinance/CoinGecko (si useLive=true) o datos sintéticos.",
     "inputSchema": {
         "type": "object",
         "properties": {
-            "symbols": {"type":"array","items":{"type":"string"}},
-            "riskFree": {"type":"number", "description":"Tasa libre anual (p.ej. 0.03)"},
-            "lookbackDays": {"type":"integer", "description":"Ventana de cálculo", "default":252}
+            "symbols": {"type": "array", "items": {"type": "string"}},
+            "useLive": {"type": "boolean", "description": "Usar datos en vivo (default true)"},
+            "days": {"type": "integer", "description": "Ventana histórica para retornos", "default": 252}
         },
         "required": ["symbols"]
     },
     "outputSchema": {
         "type": "object",
         "properties": {
-            "metrics": {"type":"array","items":{"type":"object",
-                "properties": {
-                    "symbol":{"type":"string"},
-                    "meanAnnual":{"type":"number"},
-                    "volAnnual":{"type":"number"},
-                    "sharpe":{"type":"number"}
-                },
-                "required":["symbol","meanAnnual","volAnnual","sharpe"]
+            "quotes": {"type": "array", "items": {"type": "object",
+                "properties": {"symbol":{"type":"string"}, "name":{"type":"string"},
+                               "last":{"type":"number"}, "ret1d":{"type":"number"},
+                               "ret7d":{"type":"number"}, "ret30d":{"type":"number"}},
+                "required": ["symbol","last"]
             }}
         },
-        "required":["metrics"]
+        "required": ["quotes"]
     }
 }
 
@@ -38,25 +35,47 @@ def _daily_returns(prices: List[float]) -> List[float]:
 
 def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(args, dict): raise ValueError("'arguments' debe ser object")
-    syms = args.get("symbols")
-    rf = float(args.get("riskFree", 0.02))
-    lb = int(args.get("lookbackDays", 252))
+    syms: List[str] = args.get("symbols") or []
+    use_live = bool(args.get("useLive", True))
+    days = int(args.get("days", 252))
+    if not syms: raise ValueError("'symbols' no puede estar vacío")
+
+    payload = {"quotes": []}
+
+    if use_live:
+        try:
+            hist = get_history(syms, days=days)
+            quotes = last_and_returns(hist)
+            for q in quotes:
+                q["name"] = UNIVERSE.get(q["symbol"], {}).get("name", q["symbol"])
+            payload["quotes"] = quotes
+            return {
+                "content": [{"type": "text", "text": json.dumps(payload, ensure_ascii=False)}],
+                "structuredContent": payload,
+                "isError": False
+            }
+        except Exception as e:
+            # cae a sintético
+            pass
+
+    # Fallback sintético
     prices = get_builtin_prices()
     out = []
     for s in syms:
         if s not in prices: continue
-        p = prices[s][-lb:]
-        rets = _daily_returns(p)
-        if len(rets) < 2: continue
-        mu_d = statistics.mean(rets)
-        vol_d = statistics.pstdev(rets)
-        mu_a = (1+mu_d)**252 - 1
-        vol_a = vol_d * (252**0.5)
-        sharpe = (mu_a - rf) / vol_a if vol_a > 0 else 0.0
-        out.append({"symbol": s, "meanAnnual": mu_a, "volAnnual": vol_a, "sharpe": sharpe})
-    payload = {"metrics": out}
+        ps = prices[s]
+        def _ret(p, d): return (p[-1]/p[-1-d]-1.0) if len(p)>d else 0.0
+        out.append({
+            "symbol": s,
+            "name": UNIVERSE.get(s, {}).get("name", s),
+            "last": float(ps[-1]),
+            "ret1d": _ret(ps,1),
+            "ret7d": _ret(ps,5),
+            "ret30d": _ret(ps,21),
+        })
+    payload["quotes"] = out
     return {
-        "content": [{"type":"text","text": json.dumps(payload, ensure_ascii=False)}],
+        "content": [{"type": "text", "text": json.dumps(payload, ensure_ascii=False)}],
         "structuredContent": payload,
         "isError": False
     }

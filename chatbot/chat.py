@@ -13,12 +13,14 @@ def log_chat(role: str, content: str):
         f.write(json.dumps({"role":role,"content":content}, ensure_ascii=False) + "\n")
 
 def parse_tool_line(line: str):
-    if not line.startswith(("!fs","!gh","!local","!inv")): return None
-    try:
-        prefix, rest = line.split(" ",1)
-        return prefix[1:], json.loads(rest)  
-    except Exception:
+    if not line.startswith(("!fs","!gh","!local","!invest","!inv")): 
         return None
+    prefix, rest = line.split(" ",1)
+    kind = prefix[1:]
+    if kind == "inv":  # alias
+        kind = "invest"
+    return kind, json.loads(rest)
+
 
 def pretty(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=2)

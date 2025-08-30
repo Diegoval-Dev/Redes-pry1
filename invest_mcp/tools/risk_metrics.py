@@ -1,18 +1,19 @@
-# invest_mcp/tools/risk_metrics.py
-import json, math, statistics
+import json, statistics
 from typing import Dict, Any, List
+from invest_mcp.lib.data_live import get_history
 from .data import get_builtin_prices
 
 DEF = {
     "name": "risk_metrics",
     "title": "Métricas de riesgo y retorno",
-    "description": "Calcula retorno esperado anualizado, volatilidad anual y Sharpe para símbolos.",
+    "description": "Retorno anual, volatilidad anual y Sharpe (live con fallback).",
     "inputSchema": {
         "type": "object",
         "properties": {
             "symbols": {"type":"array","items":{"type":"string"}},
             "riskFree": {"type":"number", "description":"Tasa libre anual (p.ej. 0.03)"},
-            "lookbackDays": {"type":"integer", "description":"Ventana de cálculo", "default":252}
+            "lookbackDays": {"type":"integer", "description":"Ventana de cálculo", "default":252},
+            "useLive": {"type":"boolean", "description":"Usar datos en vivo", "default": True}
         },
         "required": ["symbols"]
     },
@@ -20,12 +21,8 @@ DEF = {
         "type": "object",
         "properties": {
             "metrics": {"type":"array","items":{"type":"object",
-                "properties": {
-                    "symbol":{"type":"string"},
-                    "meanAnnual":{"type":"number"},
-                    "volAnnual":{"type":"number"},
-                    "sharpe":{"type":"number"}
-                },
+                "properties": {"symbol":{"type":"string"}, "meanAnnual":{"type":"number"},
+                               "volAnnual":{"type":"number"}, "sharpe":{"type":"number"}},
                 "required":["symbol","meanAnnual","volAnnual","sharpe"]
             }}
         },
@@ -38,14 +35,28 @@ def _daily_returns(prices: List[float]) -> List[float]:
 
 def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(args, dict): raise ValueError("'arguments' debe ser object")
-    syms = args.get("symbols")
+    syms = args.get("symbols") or []
     rf = float(args.get("riskFree", 0.02))
     lb = int(args.get("lookbackDays", 252))
-    prices = get_builtin_prices()
+    use_live = bool(args.get("useLive", True))
+    if not syms: raise ValueError("'symbols' no puede estar vacío")
+
+    hist = {}
+    if use_live:
+        try:
+            hist = get_history(syms, days=lb)
+        except Exception:
+            hist = {}
+
+    if not hist:
+        # Fallback sintético
+        allp = get_builtin_prices()
+        for s in syms:
+            if s in allp:
+                hist[s] = allp[s][-lb:]
+
     out = []
-    for s in syms:
-        if s not in prices: continue
-        p = prices[s][-lb:]
+    for s, p in hist.items():
         rets = _daily_returns(p)
         if len(rets) < 2: continue
         mu_d = statistics.mean(rets)
@@ -54,6 +65,7 @@ def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
         vol_a = vol_d * (252**0.5)
         sharpe = (mu_a - rf) / vol_a if vol_a > 0 else 0.0
         out.append({"symbol": s, "meanAnnual": mu_a, "volAnnual": vol_a, "sharpe": sharpe})
+
     payload = {"metrics": out}
     return {
         "content": [{"type":"text","text": json.dumps(payload, ensure_ascii=False)}],

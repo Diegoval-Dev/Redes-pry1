@@ -20,10 +20,10 @@ def pretty(obj: Any) -> str:
         return str(obj)
 
 def parse_tool_line(line: str):
-    if not line.startswith(("!fs","!gh","!local")): return None
+    if not line.startswith(("!fs","!gh","!local","!inv")): return None 
     try:
         prefix, rest = line.split(" ",1)
-        return prefix[1:], json.loads(rest)  # ("fs"/"gh"/"local"), {"tool":..,"args":..}
+        return prefix[1:], json.loads(rest)
     except Exception:
         return None
       
@@ -186,6 +186,7 @@ def exec_tool(fleet: MCPFleet, kind: str, tool: str, args: Dict[str, Any]) -> Di
     if kind == "fs":   return fleet.fs.tools_call(tool, args)
     if kind == "gh":   return fleet.gh.tools_call(tool, args)
     if kind == "local":return fleet.local.tools_call(tool, args)
+    if kind == "inv":   return fleet.invest.tools_call(tool, args)
     raise ValueError(f"Tipo de servidor desconocido: {kind}")
 
 # ---------- state ----------
@@ -218,6 +219,9 @@ with st.sidebar:
         st.session_state.fleet = MCPFleet()
         st.session_state.fleet.start_all()
         st.success("Servidores reiniciados.")
+    if st.button("Invest: Quotes BTC/ETH/SPY/GLD"):
+        cmd = '!inv {"tool":"price_quote","args":{"symbols":["BTC","ETH","SPY","GLD"],"useLive":true}}'
+        st.session_state.messages.append({"role":"user","content":cmd})
 
     st.markdown("---")
     st.markdown("### Comandos rápidos")

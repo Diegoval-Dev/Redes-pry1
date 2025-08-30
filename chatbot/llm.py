@@ -9,7 +9,9 @@ SYSTEM_PROMPT = (
     "!fs {\"tool\":\"list_directory\",\"args\":{\"path\":\"D:/...\",\"recursive\":false}}\n"
     "!gh {\"tool\":\"list_commits\",\"args\":{\"owner\":\"...\",\"repo\":\"...\",\"sha\":\"main\"}}\n"
     "!local {\"tool\":\"json_validate\", ...}\n"
-    "!inv {\"tool\":\"price_quote\",\"args\":{\"symbols\":[\"BTC\",\"ETH\",\"SPY\",\"GLD\"],\"useLive\":true}}\n"
+    "!invest {\"tool\":\"price_quote\",\"args\":{\"symbols\":[\"BTC\",\"ETH\",\"SPY\",\"GLD\"],\"useLive\":true}}\n"
+    "!invest {\"tool\":\"risk_metrics\",\"args\":{\"symbols\":[\"SPY\",\"QQQ\",\"GLD\",\"BTC\"],\"riskFree\":0.02,\"lookbackDays\":252,\"useLive\":true}}\n"
+    "!invest {\"tool\":\"build_portfolio\",\"args\":{\"capital\":10000,\"riskLevel\":3,\"allowedSymbols\":[\"SPY\",\"QQQ\",\"GLD\",\"BTC\",\"ETH\"],\"useLive\":true}}\n"
     "No inventes parámetros. Si faltan, pídelo."
 )
 

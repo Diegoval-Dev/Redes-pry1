@@ -60,19 +60,20 @@ At a high level, the app starts a small **fleet** of MCP servers (Filesystem, Gi
 
 ```mermaid
 flowchart LR
-    UI[Streamlit UI (ui/app.py)] -- chat & actions --> CHAT[CLI/Chat Orchestrator (chatbot/chat.py)]
+    UI["Streamlit UI (ui/app.py)"] -- "chat & actions" --> CHAT["CLI/Chat Orchestrator (chatbot/chat.py)"]
     subgraph Orchestration
-      CHAT --> RUNTIME[MCP Runtime (chatbot/mcp_runtime.py)]
-      RUNTIME --> FS[@mcp/server-filesystem (npx)]
-      RUNTIME --> GH[@mcp/server-github (npx)]
-      RUNTIME --> LOCAL[Remote MCP (HTTP RPC)]
-      RUNTIME --> INVEST[Invest MCP (stdio, invest_mcp/main.py)]
+      CHAT --> RUNTIME["MCP Runtime (chatbot/mcp_runtime.py)"]
+      RUNTIME --> FS["@mcp/server-filesystem (npx)"]
+      RUNTIME --> GH["@mcp/server-github (npx)"]
+      RUNTIME --> LOCAL["Remote MCP (HTTP RPC)"]
+      RUNTIME --> INVEST["Invest MCP (stdio, invest_mcp/main.py)"]
     end
-    INVEST --> TOOLS[price_quote | risk_metrics | build_portfolio | rebalance_plan]
-    TOOLS --> LIVE[(yfinance & CoinGecko)]
-    CHAT -. OpenAI API .- LLM[(LLM: openai.ChatCompletions)]
-    FS --> FSDIR[/Filesystem directory/]
-    GH --> GitHub[(GitHub API)]
+    INVEST --> TOOLS["price_quote | risk_metrics | build_portfolio | rebalance_plan"]
+    TOOLS --> LIVE["yfinance & CoinGecko"]
+    CHAT -. "OpenAI API" .- LLM["LLM: openai.ChatCompletions"]
+    FS --> FSDIR["/Filesystem directory/"]
+    GH --> GitHub["GitHub API"]
+
 ```
 
 **Key decisions & trade‑offs**

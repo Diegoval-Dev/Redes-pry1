@@ -21,24 +21,18 @@ def pretty(obj: Any) -> str:
         return str(obj)
 
 def parse_tool_line(line: str):
-    """
-    Acepta comandos tipo:
-      !fs {...}
-      !gh {...}
-      !local {...}
-      !invest {...}
-      !inv {...}  (alias de !invest)
-    """
+    line = (line or "").strip()
     if not line.startswith(("!fs","!gh","!local","!invest","!inv")):
         return None
     prefix, rest = line.split(" ", 1)
-    kind = prefix[1:]
+    kind = prefix[1:].strip().lower()
     if kind == "inv":
         kind = "invest"
     try:
         return kind, json.loads(rest)
     except Exception:
         return None
+
 
 def _prune_commits_for_ui(commits):
     if not isinstance(commits, list):
@@ -262,8 +256,28 @@ def render_mcp_result(tool_key: str, result: Dict[str, Any]):
         st.json(norm["data"])
     else:
         st.code(str(norm["data"]), language="text")
+        
+def _normalize_json_validate(kind: str, tool: str, args: dict) -> dict:
+    if kind != "local" or tool != "json_validate":
+        return args
+    if "data" not in args and "text" in args and isinstance(args["text"], str):
+        try:
+            import json as _json
+            parsed = _json.loads(args["text"])
+            return {**args, "data": parsed}
+        except Exception as e:
+            return {
+                "_client_side_result": True,
+                "_payload": {
+                    "valid": False,
+                    "errors": [f"JSON parse error: {e}"],
+                    "raw": args["text"],
+                }
+            }
+    return args
 
 def exec_tool(fleet: MCPFleet, kind: str, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    kind = (kind or "").strip().lower() 
     if kind == "fs":      return fleet.fs.tools_call(tool, args)
     if kind == "gh":      return fleet.gh.tools_call(tool, args)
     if kind == "local":   return fleet.local.tools_call(tool, args)

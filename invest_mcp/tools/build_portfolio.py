@@ -119,7 +119,7 @@ def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
     if not allowed:
         raise ValueError("No hay símbolos válidos en 'allowedSymbols'")
 
-    # 1) Obtener series de precios (en vivo => get_history; si falla o vacío => fallback sintético)
+    # 1) Series de precios (live o sintético)
     hist: Dict[str, List[float]] = {}
     if use_live:
         try:
@@ -131,36 +131,47 @@ def IMPL(args: Dict[str, Any]) -> Dict[str, Any]:
         prices = get_builtin_prices()
         hist = {s: prices[s][-252:] for s in allowed if s in prices}
 
-    # 2) Retornos diarios por símbolo
+    # 2) Retornos diarios
     series_map = {s: _daily_returns(p) for s, p in hist.items() if len(p) >= 2}
     if len(series_map) < 2:
         raise ValueError("Se requieren >=2 símbolos con historial suficiente")
 
     symbols = list(series_map.keys())
-    R = [series_map[s] for s in symbols]  # lista de listas (días) por símbolo
+    R = [series_map[s] for s in symbols]
 
-    # 3) Estadísticos diarios y anualización
+    # 3) Estadísticos (anualizados)
     mus_d = [_mean(rets) for rets in R]
-    # sig_d no se usa en el optimizador, pero lo mantenemos por claridad
-    _ = [_pstdev(rets) for rets in R]
     mu_a = [(1 + m) ** 252 - 1 for m in mus_d]
 
-    # 4) Covarianza diaria -> anual
+    # 4) Covarianza (diaria -> anual)
     C_d = _cov_matrix(R)
     C_a = [[c * 252 for c in row] for row in C_d]
 
-    # 5) Optimización Markowitz (max mu^T w - (gamma/2) w^T Σ w  s.a. w>=0, sum w=1)
-    gamma_map = {1: 50.0, 2: 20.0, 3: 10.0, 4: 5.0, 5: 2.0}
+    # 5) Optimización Markowitz (long-only, sum w=1)
+    #    Mapeo más agresivo para niveles altos:
+    gamma_map = {1: 80.0, 2: 30.0, 3: 10.0, 4: 1.5, 5: 0.1}
     gamma = gamma_map.get(risk_level, 10.0)
 
     n = len(symbols)
-    w = [1.0 / n] * n
+    w = [1.0 / n] * n                     
     lr = 0.01
+    max_w = float(args.get("maxWeight", 0.7))
+
     for _ in range(1500):
         Cw = _matvec(C_a, w)
         grad = [-mu_a[i] + gamma * Cw[i] for i in range(n)]
         w = [w[i] - lr * grad[i] for i in range(n)]
+        # Proyección al simplex
         w = _project_simplex(w)
+
+        # Tope por activo (opcional) + re-normalización
+        if max_w < 1.0:
+            w = [min(wi, max_w) for wi in w]
+            s = sum(w)
+            if s <= 0:
+                w = [1.0 / n] * n   # fallback numérico
+            else:
+                w = [wi / s for wi in w]
 
     exp_ret = _dot(mu_a, w)
     vol = (_dot(w, _matvec(C_a, w))) ** 0.5

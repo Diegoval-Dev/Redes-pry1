@@ -202,14 +202,14 @@ class MCPFleet:
     def __init__(self):
         self.fs = MCPServer("filesystem", ["npx","-y","@modelcontextprotocol/server-filesystem", FS_ROOT])
         self.gh = MCPServer("github", ["npx","-y","@modelcontextprotocol/server-github"])
-        self.local = MCPHttpServer("local-remote", REMOTE_MCP_URL)
+        self.local = MCPHttpServer("local-remote", REMOTE_MCP_URL, REMOTE_MCP_PATH) if REMOTE_MCP_URL else None
         self.invest = MCPServer("invest", ["python","-m","invest_mcp.main"])
         self._started = False
 
     def start_all(self):
         if self._started: return
         # Arranca uno por uno, con diagnóstico
-        for s in (self.fs, self.gh, self.local, self.invest):
+        for s in (self.fs, self.gh, self.invest) + ((self.local,) if self.local else ()):
             try:
                 s.start()
             except Exception as e:
@@ -217,7 +217,7 @@ class MCPFleet:
         self._started = True
 
     def stop_all(self):
-        for s in (self.fs, self.gh, self.local, self.invest):
+        for s in (self.fs, self.gh, self.invest) + ((self.local,) if self.local else ()):
             try:
                 s.seq += 1
                 s._send({"jsonrpc":JSONRPC,"id":s.seq,"method":"shutdown"})

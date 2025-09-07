@@ -9,11 +9,10 @@ from datetime import datetime
 
 from chatbot.llm import LLM
 from chatbot.mcp_runtime import MCPFleet
-from chatbot.config import FS_ROOT, GITHUB_PERSONAL_ACCESS_TOKEN
+from chatbot.config import FS_ROOT, GITHUB_PERSONAL_ACCESS_TOKEN, WFM_JWT
 
 st.set_page_config(page_title="MCP Chat UI", page_icon="🤖", layout="wide")
 
-# ---------- util ----------
 def pretty(obj: Any) -> str:
     try:
         return json.dumps(obj, ensure_ascii=False, indent=2)
@@ -21,18 +20,16 @@ def pretty(obj: Any) -> str:
         return str(obj)
 
 def parse_tool_line(line: str):
-    line = (line or "").strip()
-    if not line.startswith(("!fs","!gh","!local","!invest","!inv")):
+    if not line.startswith(("!fs","!gh","!local","!invest","!inv","!wfm", "!anki")):
         return None
     prefix, rest = line.split(" ", 1)
-    kind = prefix[1:].strip().lower()
+    kind = prefix[1:]
     if kind == "inv":
         kind = "invest"
     try:
         return kind, json.loads(rest)
     except Exception:
         return None
-
 
 def _prune_commits_for_ui(commits):
     if not isinstance(commits, list):
@@ -56,12 +53,6 @@ def _try_load_json(s: str) -> Optional[Any]:
         return None
 
 def _norm_result(result: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Normaliza tu estructura MCP:
-    - Si hay structuredContent: úsalo.
-    - Si content[0].text tiene JSON, úsalo.
-    - Si no, devolvemos el texto plano.
-    """
     if isinstance(result, dict) and result.get("structuredContent") is not None:
         return {"kind": "structured", "data": result["structuredContent"]}
 
@@ -78,9 +69,6 @@ def _norm_result(result: Dict[str, Any]) -> Dict[str, Any]:
     return {"kind": "plain", "data": blob}
 
 def _render_commits(data: Any):
-    """
-    data esperado: lista de commits (GitHub API). Si no es lista, lo muestra en crudo.
-    """
     if not isinstance(data, list):
         st.json(data)
         return
@@ -114,12 +102,6 @@ def _render_commits(data: Any):
             st.caption(f"👤 {r['Autor']} · 🕒 {r['Fecha']} · {_linkify(r['Link'], 'ver')}")
 
 def _render_files_listing(text_blob: str):
-    """
-    Espera el formato:
-      [FILE] hola.txt
-      [FILE] test.txt
-    Lo transforma a tarjetas con ícono.
-    """
     lines = [ln.strip() for ln in text_blob.splitlines() if ln.strip()]
     if not lines:
         st.info("No hay elementos.")
@@ -140,18 +122,8 @@ def _render_files_listing(text_blob: str):
             st.markdown(f"{icon} **{name}**  \n`{kind}`")
 
 def render_mcp_result(tool_key: str, result: Dict[str, Any]):
-    """
-    tool_key ejemplos:
-      'github:list_commits'
-      'filesystem:list_directory'
-      'local:json_validate'
-      'invest:price_quote'
-      'invest:risk_metrics'
-      'invest:build_portfolio'
-    """
     norm = _norm_result(result)
 
-    # ---- INVEST: price_quote ----
     if tool_key == "invest:price_quote":
         data = norm["data"]
         quotes = (data or {}).get("quotes", [])
@@ -171,7 +143,6 @@ def render_mcp_result(tool_key: str, result: Dict[str, Any]):
                     st.markdown(f"- **Último:** {q.get('last')}")
         return
 
-    # ---- INVEST: risk_metrics ----
     if tool_key == "invest:risk_metrics":
         data = norm["data"]
         metrics = (data or {}).get("metrics", [])
@@ -191,7 +162,6 @@ def render_mcp_result(tool_key: str, result: Dict[str, Any]):
                     st.json(r)
         return
 
-    # ---- INVEST: build_portfolio ----
     if tool_key == "invest:build_portfolio":
         data = norm["data"] or {}
         st.write("### Portafolio sugerido")
@@ -220,13 +190,11 @@ def render_mcp_result(tool_key: str, result: Dict[str, Any]):
             st.json(data)
         return
 
-    # ---- GitHub ----
     if tool_key == "github:list_commits":
         data = norm["data"]
         _render_commits(data)
         return
 
-    # ---- Filesystem ----
     if tool_key == "filesystem:list_directory":
         if norm["kind"] == "plain" and isinstance(norm["data"], str):
             _render_files_listing(norm["data"])
@@ -234,54 +202,38 @@ def render_mcp_result(tool_key: str, result: Dict[str, Any]):
             st.json(norm["data"])
         return
 
-    # ---- Local json_validate ----
-    if tool_key == "local:json_validate":
-        data = norm["data"]
-        if isinstance(data, dict) and "valid" in data:
-            valid = data.get("valid", False)
-            if valid:
-                st.success("✅ JSON válido")
-            else:
-                st.error("❌ JSON inválido")
-                errs = data.get("errors") or []
-                if errs:
-                    with st.expander("Ver errores"):
-                        for e in errs:
-                            st.markdown(f"- {e}")
-        st.json(data)
+    # ---- Warframe Market: snapshot simple ----
+    if tool_key == "wfm:wfm_price_snapshot":
+        data = norm["data"] or {}
+        st.write("### Warframe.Market — Price snapshot")
+        st.markdown(f"**Item:** `{data.get('url_name','?')}` · **Platform:** `{data.get('platform','pc')}`")
+        summary = data.get("summary") or {}
+        with st.container(border=True):
+            bs = summary.get("best_sell")
+            bb = summary.get("best_buy")
+            if bs:
+                st.markdown(f"- **Best SELL:** {bs.get('platinum')}p · user: `{bs.get('user')}` · status: {bs.get('status')} · rep: {bs.get('reputation')}")
+            if bb:
+                st.markdown(f"- **Best BUY:** {bb.get('platinum')}p · user: `{bb.get('user')}` · status: {bb.get('status')} · rep: {bb.get('reputation')}")
+            mids = summary.get("midpoints") or {}
+            spread = summary.get("spread") or {}
+            st.markdown(f"- **Mid SELL:** {mids.get('sell')}p · **Mid BUY:** {mids.get('buy')}p · **Spread%:** {spread.get('pct')}")
+        with st.expander("Ver JSON crudo"):
+            st.json(data)
         return
 
-    # ---- Fallbacks genéricos ----
+    # Fallback genérico
     if norm["kind"] in ("structured", "json-text"):
         st.json(norm["data"])
     else:
         st.code(str(norm["data"]), language="text")
-        
-def _normalize_json_validate(kind: str, tool: str, args: dict) -> dict:
-    if kind != "local" or tool != "json_validate":
-        return args
-    if "data" not in args and "text" in args and isinstance(args["text"], str):
-        try:
-            import json as _json
-            parsed = _json.loads(args["text"])
-            return {**args, "data": parsed}
-        except Exception as e:
-            return {
-                "_client_side_result": True,
-                "_payload": {
-                    "valid": False,
-                    "errors": [f"JSON parse error: {e}"],
-                    "raw": args["text"],
-                }
-            }
-    return args
 
 def exec_tool(fleet: MCPFleet, kind: str, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:
-    kind = (kind or "").strip().lower() 
     if kind == "fs":      return fleet.fs.tools_call(tool, args)
     if kind == "gh":      return fleet.gh.tools_call(tool, args)
-    if kind == "local":   return fleet.local.tools_call(tool, args)
+    if kind == "local":   return fleet.local.tools_call(tool, args) if fleet.local else {"note":"local-remote deshabilitado"}
     if kind == "invest":  return fleet.invest.tools_call(tool, args)
+    if kind == "wfm":     return fleet.wfm.tools_call(tool, args)
     raise ValueError(f"Tipo de servidor desconocido: {kind}")
 
 # ---------- state ----------
@@ -296,7 +248,7 @@ if "history" not in st.session_state:
     st.session_state.history: List[Dict[str,str]] = []
 
 if "messages" not in st.session_state:
-    st.session_state.messages: List[Dict[str, Any]] = []  # [{'role', 'content'} + opcionales]
+    st.session_state.messages: List[Dict[str, Any]] = []
 
 if "pending_text" not in st.session_state:
     st.session_state.pending_text = None
@@ -306,6 +258,7 @@ with st.sidebar:
     st.markdown("## ⚙️ Config & Estado")
     st.markdown(f"- **FS_ROOT**: `{FS_ROOT}`")
     st.markdown(f"- **GitHub Token**: {'✅' if GITHUB_PERSONAL_ACCESS_TOKEN else '❌'}")
+    st.markdown(f"- **WFM_JWT**: {'✅' if WFM_JWT else '❌'}")
     if st.button("🔄 Reiniciar servidores MCP"):
         try:
             st.session_state.fleet.stop_all()
@@ -315,56 +268,16 @@ with st.sidebar:
         st.session_state.fleet.start_all()
         st.success("Servidores reiniciados.")
 
-    st.markdown("---")
-    st.markdown("### Inversiones (atajos)")
-    if st.button("💹 Precios BTC/ETH/SPY/GLD (live)"):
-        st.session_state.messages.append({
-            "role":"user",
-            "content": '!invest {"tool":"price_quote","args":{"symbols":["BTC","ETH","SPY","GLD"],"useLive":true}}'
-        })
-
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("📊 Risk (SPY,QQQ,GLD,BTC)"):
-            st.session_state.messages.append({
-                "role":"user",
-                "content": '!invest {"tool":"risk_metrics","args":{"symbols":["SPY","QQQ","GLD","BTC"],"riskFree":0.02,"lookbackDays":252,"useLive":true}}'
-            })
-    with col2:
-        if st.button("📈 Portfolio 10k RL=3"):
-            st.session_state.messages.append({
-                "role":"user",
-                "content": '!invest {"tool":"build_portfolio","args":{"capital":10000,"riskLevel":3,"allowedSymbols":["SPY","QQQ","GLD","BTC","ETH"],"useLive":true}}'
-            })
-
-    st.markdown("---")
-    st.markdown("### Comandos rápidos")
-    if st.button("Listar FS_ROOT"):
-        cmd = '!fs {"tool":"list_directory","args":{"path":"%s","recursive":false}}' % FS_ROOT.replace("\\","/")
-        st.session_state.messages.append({"role":"user","content":cmd})
-
-    owner = st.text_input("Owner", value="Diegoval-Dev", key="owner_sidebar")
-    repo  = st.text_input("Repo", value="Redes-pry1", key="repo_sidebar")
-    if st.button("Commits (main)"):
-        if owner and repo:
-            cmd = f'!gh {{"tool":"list_commits","args":{{"owner":"{owner}","repo":"{repo}","sha":"main","per_page":3}}}}'
-            st.session_state.messages.append({"role":"user","content":cmd})
-
-# ---------- main UI ----------
+# ---------- main ----------
 st.title("🤖 MCP Chat")
 
-# historial visible
 for m in st.session_state.messages:
     with st.chat_message(m["role"]):
         if m.get("kind") == "tool":
             title = m.get("tool_header") or m.get("tool_key") or "resultado"
             tool_key = m.get("tool_key", "")
             st.markdown(f"**{title}**")
-
-            # Vista específica por herramienta
             render_mcp_result(tool_key, m["result"])
-
-            # JSON crudo
             with st.expander("Ver JSON crudo" + (" (podado)" if tool_key == "github:list_commits" else "")):
                 norm = _norm_result(m["result"])
                 data = norm.get("data")
@@ -375,18 +288,14 @@ for m in st.session_state.messages:
         else:
             st.markdown(m["content"])
 
-# input del chat
-user_msg = st.chat_input("Escribe tu mensaje o pega un comando !fs/!gh/!local/!invest …")
-
+user_msg = st.chat_input("Pide cosas en lenguaje natural (ej. 'snapshot de galatine prime blade en pc')")
 def queue_user_message(text: str):
-    """Encola el texto para procesarlo en el siguiente ciclo y hace eco inmediato."""
     st.session_state.messages.append({"role": "user", "content": text})
     st.session_state.history.append({"role": "user", "content": text})
     st.session_state.pending_text = text
     st.rerun()
 
 def process_pending_text():
-    """Procesa lo que esté en pending_text: comando directo o conversación con el LLM."""
     text = st.session_state.pending_text
     if not text:
         return
@@ -413,11 +322,9 @@ def process_pending_text():
                     "content": f"{kind}:{tool} ✗\n\n```\n{e}\n```"
                 })
         else:
-            # Chat con LLM
             answer = st.session_state.llm.chat(st.session_state.history, text)
             st.session_state.messages.append({"role": "assistant", "content": answer})
 
-            # Auto-ejecutar comandos sugeridos por el LLM
             executed_any = False
             for line in answer.splitlines():
                 cmd = parse_tool_line(line.strip())

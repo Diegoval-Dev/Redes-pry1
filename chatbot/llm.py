@@ -24,9 +24,13 @@ FORMATO EXACTO DE LÍNEAS (una por línea, sin texto extra):
   !invest {"tool":"price_quote","args":{"symbols":["BTC","ETH","SPY","GLD"],"useLive":true}}
   !invest {"tool":"risk_metrics","args":{"symbols":["SPY","QQQ","GLD","BTC"],"riskFree":0.02,"lookbackDays":252,"useLive":true}}
   !invest {"tool":"build_portfolio","args":{"capital":10000,"riskLevel":3,"allowedSymbols":["SPY","QQQ","GLD","BTC","ETH"],"useLive":true}}
+  !wfm {"tool":"wfm_price_snapshot","args":{"url_name":"galatine_prime_blade","platform":"pc"}}
+
+
+- Si la petición es **conocimiento general o conversación** y no requiere herramientas, RESPONDE normalmente.
 
 REGLAS:
-- Solo incluye líneas !fs/!gh/!local/!invest cuando la intención del usuario sea accionable. En todo lo demás, responde normalmente sin emitir comandos.
+- Solo incluye líneas !fs/!gh/!local/!invest/!wfm cuando la intención del usuario sea accionable. En todo lo demás, responde normalmente sin emitir comandos.
 - Emite los comandos al FINAL de tu respuesta, tras un salto de línea, uno por línea, SIN explicaciones ni texto extra en esas líneas.
 - No inventes parámetros. Usa nombres de herramienta exactamente como arriba (snake_case).
 - Si faltan datos esenciales (p. ej., owner/repo para GitHub), PÍDELOS brevemente en tu respuesta y NO emitas el comando hasta tenerlos.
@@ -75,6 +79,17 @@ INVERSIONES:
 - allowedSymbols: usa un set razonable si no especifica (p.ej., ["SPY","QQQ","GLD","BTC","ETH"]).
 - Siempre "useLive": true por defecto.
 
+Warframe Market (prefijo !wfm):
+- Usa:
+  - wfm_search_items (buscar por nombre),
+  - wfm_get_item (detalles por url_name),
+  - wfm_get_orders (órdenes; puede resumir),
+  - wfm_price_snapshot (mejor compra/venta),
+  - wfm_best_flips (posibles flips),
+  - wfm_get_dropsources / wfm_riven_items / wfm_riven_attributes / wfm_search_riven_auctions (avanzado).
+- No inventes argumentos; respeta los nombres: url_name, platform, language, etc.
+
+
 ESTILO:
 - Responde primero al usuario en lenguaje natural y conciso.
 - Después, si aplica, añade las líneas de comandos MCP (una por línea), al final.
@@ -105,6 +120,11 @@ Few-shot 5 (Inversiones):
 Usuario: Hazme un portafolio con $100 y riesgo alto
 Asistente: (explicación corta)
 !invest {"tool":"build_portfolio","args":{"capital":100,"riskLevel":5,"allowedSymbols":["SPY","QQQ","GLD","BTC","ETH"],"useLive":true}}
+
+Few-shot 6 (warframe market):
+Usuario: precio rápido de galatine prime blade en pc
+Asistente:
+!wfm {"tool":"wfm_price_snapshot","args":{"url_name":"galatine_prime_blade","platform":"pc"}}
 """
 
 class LLM:

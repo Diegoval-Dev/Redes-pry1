@@ -28,7 +28,7 @@ def parse_tool_line(line: str) -> Optional[Tuple[str, Dict[str, Any]]]:
 
     Devuelve (kind, payload_dict) o None si no coincide.
     """
-    if not line.startswith(("!fs", "!gh", "!local", "!invest", "!inv")):
+    if not line.startswith(("!fs", "!gh", "!local", "!invest", "!inv", "!wfm", "!anki")):
         return None
     try:
         prefix, rest = line.split(" ", 1)

@@ -7,3 +7,9 @@ pandas>=2.2.2
 numpy>=1.26
 requests>=2.32
 Flask>=3.0.0
+
+# Estos requirements son para el server de XTsebas
+mcp>=1.1.0
+httpx>=0.27.0
+pydantic>=2.7.0
+cachetools>=5.3.3

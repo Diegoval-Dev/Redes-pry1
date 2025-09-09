@@ -47,3 +47,5 @@ MCP_ANKI_ARGS = os.getenv("MCP_ANKI_ARGS", "D:/UVG/Redes/pry1/Anki-MCP/dist/cli.
 # Rutas de base de datos y media (opcionales)
 MCP_ANKI_DB_PATH = os.getenv("MCP_ANKI_DB_PATH", "")
 MCP_ANKI_MEDIA_DIR = os.getenv("MCP_ANKI_MEDIA_DIR", "")
+
+FITNESS_SERVER_PATH = r"D:\UVG\Redes\pry1\fitness-server\server.py"

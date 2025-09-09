@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@modelcontextprotocol/server-github": "^2025.4.8"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/server-filesystem": "^2025.8.21"
+  }
+}
